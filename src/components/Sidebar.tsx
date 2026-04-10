@@ -21,6 +21,8 @@ export default function Sidebar({ userEmail }: { userEmail: string }) {
     { name: 'Habits',      path: '/dashboard/habits',   icon: '✅' },
     { name: 'Projects',    path: '/dashboard/projects', icon: '📁' },
     { name: 'Time Logger', path: '/dashboard/timer',    icon: '⏱️' },
+    { name: 'Calendar',    path: '/dashboard/calendar', icon: '📅' },
+    { name: 'Reports',     path: '/dashboard/reports',  icon: '📈' },
   ];
 
   return (

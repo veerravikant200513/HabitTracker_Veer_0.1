@@ -223,7 +223,7 @@ export default function HabitsPage() {
                   {ICONS.map(i => (
                     <span 
                       key={i} 
-                      className={`cursor-pointer border-2 p-1 rounded-md transition-all ${icon === i ? 'border-[var(--accent)] bg-[var(--bg-elevated)]' : 'border-transparent opacity-50 hover:opacity-100'}`}
+                      className={`cursor-pointer border-2 p-1 rounded-md transition-all ${icon === i ? 'border-white shadow-[0_0_0_2px_var(--accent)] bg-[var(--bg-elevated)]' : 'border-transparent opacity-50 hover:opacity-100'}`}
                       onClick={() => setIcon(i)}
                     >
                       {i}

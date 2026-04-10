@@ -48,14 +48,10 @@ export default function TimerPage() {
   }
 
   async function saveSession() {
-    if (seconds < 60) {
-      toast.error('Session must be at least 1 minute');
-      return;
-    }
-    
     setIsActive(false);
-    clearInterval(intervalRef.current!);
-    const minutes = Math.floor(seconds / 60);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    
+    const minutes = Math.max(1, Math.round(seconds / 60));
     
     await logTime(minutes);
     setSeconds(0);

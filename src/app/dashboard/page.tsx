@@ -46,8 +46,28 @@ export default function DashboardPage() {
   // Derived state
   const completedTodayCount = 0; // Will be implemented with daily check logic
   const activeProjectsCount = 0; // Will implement project fetching
-  const thisWeekHours = logs.slice(0, 7).reduce((sum, log) => sum + (log.duration_minutes || 0), 0) / 60; // Approximate
-
+  const now = new Date();
+  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+  
+  const thisWeekMinutes = logs
+    .filter(l => new Date(l.logged_date) >= oneWeekAgo)
+    .reduce((sum, log) => sum + (log.duration_minutes || 0), 0);
+  
+  const lastWeekMinutes = logs
+    .filter(l => {
+      const d = new Date(l.logged_date);
+      return d >= twoWeeksAgo && d < oneWeekAgo;
+    })
+    .reduce((sum, log) => sum + (log.duration_minutes || 0), 0);
+    
+  const thisWeekHours = thisWeekMinutes / 60;
+  
+  let percentageChange = 0;
+  if (lastWeekMinutes > 0) percentageChange = ((thisWeekMinutes - lastWeekMinutes) / lastWeekMinutes) * 100;
+  else if (thisWeekMinutes > 0) percentageChange = 100;
+  
+  const isPositive = percentageChange >= 0;
   return (
     <>
       <header className="page-header">
@@ -102,7 +122,9 @@ export default function DashboardPage() {
         <div className="card bento-3" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div className="card-label mb-2">Time This Week</div>
           <div className="stat-value text-3xl mb-1">{thisWeekHours.toFixed(1)}<span className="text-lg text-muted">h</span></div>
-          <div className="badge badge-success inline-flex">+12% vs last week</div>
+          <div className={`badge ${isPositive ? 'badge-success' : 'badge-error'} inline-flex`}>
+            {isPositive ? '+' : ''}{percentageChange.toFixed(0)}% vs last week
+          </div>
         </div>
 
         <div className="card bento-3" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -135,9 +157,9 @@ export default function DashboardPage() {
                     <div className="habit-icon" style={{ background: `${habit.color}20`, color: habit.color }}>
                       {habit.icon}
                     </div>
-                    <div className="flex-1">
-                      <div className="font-semibold">{habit.name}</div>
-                      <div className="text-xs text-secondary mt-1 max-w-[200px] truncate">{habit.description || habit.category}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold truncate">{habit.name}</div>
+                      <div className="text-xs text-secondary mt-1 line-clamp-2 whitespace-normal">{habit.description || habit.category}</div>
                     </div>
                     <div className="flex gap-2">
                        <span className="badge badge-muted">🔥 {streaks.current}</span>
