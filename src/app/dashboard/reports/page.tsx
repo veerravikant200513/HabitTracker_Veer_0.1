@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Habit, HabitLog } from '@/types';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
@@ -110,7 +110,7 @@ export default function ReportsPage() {
                       />
                       <Bar dataKey="hours" radius={[0, 4, 4, 0]} barSize={24}>
                         {currentStats.breakdown.map((entry, index) => (
-                          <cell key={`cell-${index}`} fill={entry.color} />
+                          <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Bar>
                     </BarChart>
