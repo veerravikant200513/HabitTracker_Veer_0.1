@@ -67,6 +67,34 @@ export default function ReportsPage() {
     return `${currentPeriodStart.toLocaleDateString(undefined, {month:'short', day:'numeric'})} - ${end.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}`;
   };
 
+  const getPeriodLabel = () => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    if (tab === 'weekly') {
+      const startOfCurrentWeek = getStartOfWeek(today);
+      const diffDays = Math.round((currentPeriodStart.getTime() - startOfCurrentWeek.getTime()) / (7 * 24 * 60 * 60 * 1000));
+      
+      if (diffDays === 0) return 'This Week';
+      if (diffDays === -1) return 'Last Week';
+      if (diffDays === 1) return 'Next Week';
+      
+      // Otherwise show dates
+      const end = new Date(currentPeriodStart);
+      end.setDate(end.getDate() + 6);
+      return `${currentPeriodStart.toLocaleDateString(undefined, {month:'short', day:'numeric'})} - ${end.toLocaleDateString(undefined, {month:'short', day:'numeric'})}`;
+    } else {
+      const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const diffMonths = (currentPeriodStart.getFullYear() - startOfCurrentMonth.getFullYear()) * 12 + (currentPeriodStart.getMonth() - startOfCurrentMonth.getMonth());
+      
+      if (diffMonths === 0) return 'This Month';
+      if (diffMonths === -1) return 'Last Month';
+      if (diffMonths === 1) return 'Next Month';
+      
+      return currentPeriodStart.toLocaleString('default', { month: 'short', year: 'numeric' });
+    }
+  };
+
   const getStats = (currentLogs: HabitLog[], previousLogs: HabitLog[]) => {
     const currentMins = currentLogs.reduce((sum, log) => sum + (log.duration_minutes || 0), 0);
     const previousMins = previousLogs.reduce((sum, log) => sum + (log.duration_minutes || 0), 0);
@@ -97,7 +125,9 @@ export default function ReportsPage() {
         {/* Navigation segment */}
         <div className="flex items-center bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg p-1">
            <button className="px-3 py-1 hover:text-[var(--text-primary)] text-secondary transition-colors" onClick={() => shiftDate(-1)}>❮</button>
-           <button className="px-4 py-1 font-medium hover:text-[var(--text-primary)] text-secondary transition-colors text-sm border-x border-[var(--border)]" onClick={() => setReportDate(new Date())}>Current</button>
+           <button className="px-4 py-1 font-medium hover:text-[var(--text-primary)] text-secondary transition-colors text-sm border-x border-[var(--border)] min-w-[100px] text-center" onClick={() => setReportDate(new Date())}>
+             {getPeriodLabel()}
+           </button>
            <button className="px-3 py-1 hover:text-[var(--text-primary)] text-secondary transition-colors" onClick={() => shiftDate(1)}>❯</button>
         </div>
 

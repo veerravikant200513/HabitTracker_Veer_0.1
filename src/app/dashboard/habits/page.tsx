@@ -111,7 +111,7 @@ export default function HabitsPage() {
   }
 
   const COLORS = ['#7c6af7', '#22c55e', '#38bdf8', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6'];
-  const ICONS = ['📖', '💪', '🧘', '💻', '🎨', '🏃', '🎸', '💧', '🥗'];
+  const ICONS = ['📖', '💪', '🧘', '💻', '🎨', '🏃', '🎸', '💧', '🥗', '📈', '📉'];
 
   return (
     <>
