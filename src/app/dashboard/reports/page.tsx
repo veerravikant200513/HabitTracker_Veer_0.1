@@ -10,6 +10,7 @@ export default function ReportsPage() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [logs, setLogs] = useState<HabitLog[]>([]);
   const [tab, setTab] = useState<'weekly' | 'monthly'>('weekly');
+  const [reportDate, setReportDate] = useState(new Date());
 
   useEffect(() => {
     async function fetchData() {
@@ -35,25 +36,36 @@ export default function ReportsPage() {
     return date;
   };
 
-  const startOfThisWeek = getStartOfWeek(now);
-  const startOfLastWeek = new Date(startOfThisWeek);
-  startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+  const currentPeriodStart = tab === 'weekly' ? getStartOfWeek(reportDate) : new Date(reportDate.getFullYear(), reportDate.getMonth(), 1);
+  const previousPeriodStart = tab === 'weekly' 
+    ? new Date(currentPeriodStart.getTime() - 7 * 24 * 60 * 60 * 1000) 
+    : new Date(currentPeriodStart.getFullYear(), currentPeriodStart.getMonth() - 1, 1);
+  const currentPeriodEnd = tab === 'weekly'
+    ? new Date(currentPeriodStart.getTime() + 7 * 24 * 60 * 60 * 1000)
+    : new Date(currentPeriodStart.getFullYear(), currentPeriodStart.getMonth() + 1, 1);
 
-  const thisWeekLogs = logs.filter(l => new Date(l.logged_date) >= startOfThisWeek);
-  const lastWeekLogs = logs.filter(l => {
+  const currentLogs = logs.filter(l => {
     const d = new Date(l.logged_date);
-    return d >= startOfLastWeek && d < startOfThisWeek;
+    return d >= currentPeriodStart && d < currentPeriodEnd;
+  });
+  const previousLogs = logs.filter(l => {
+    const d = new Date(l.logged_date);
+    return d >= previousPeriodStart && d < currentPeriodStart;
   });
 
-  // Monthly Stats
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const shiftDate = (amount: number) => {
+    const nextDate = new Date(reportDate);
+    if (tab === 'weekly') nextDate.setDate(nextDate.getDate() + amount * 7);
+    else nextDate.setMonth(nextDate.getMonth() + amount);
+    setReportDate(nextDate);
+  };
 
-  const thisMonthLogs = logs.filter(l => new Date(l.logged_date) >= startOfMonth);
-  const lastMonthLogs = logs.filter(l => {
-    const d = new Date(l.logged_date);
-    return d >= startOfLastMonth && d < startOfMonth;
-  });
+  const getDisplayTitle = () => {
+    if (tab === 'monthly') return reportDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const end = new Date(currentPeriodStart);
+    end.setDate(end.getDate() + 6);
+    return `${currentPeriodStart.toLocaleDateString(undefined, {month:'short', day:'numeric'})} - ${end.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}`;
+  };
 
   const getStats = (currentLogs: HabitLog[], previousLogs: HabitLog[]) => {
     const currentMins = currentLogs.reduce((sum, log) => sum + (log.duration_minutes || 0), 0);
@@ -72,21 +84,26 @@ export default function ReportsPage() {
     return { current: currentMins / 60, previous: previousMins / 60, percentage, breakdown };
   };
 
-  const weeklyStats = getStats(thisWeekLogs, lastWeekLogs);
-  const monthlyStats = getStats(thisMonthLogs, lastMonthLogs);
-
-  const currentStats = tab === 'weekly' ? weeklyStats : monthlyStats;
+  const periodStats = getStats(currentLogs, previousLogs);
 
   return (
     <>
-      <header className="page-header flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Progress Reports</h1>
-          <p className="text-secondary">Analyze your productivity trends.</p>
+      <header className="page-header flex flex-col items-center justify-between gap-6 mb-8 md:flex-row">
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold">{tab === 'weekly' ? 'Weekly' : 'Monthly'} Progress</h1>
+          <p className="text-secondary">{getDisplayTitle()}</p>
         </div>
+
+        {/* Navigation segment */}
+        <div className="flex items-center bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg p-1">
+           <button className="px-3 py-1 hover:text-[var(--text-primary)] text-secondary transition-colors" onClick={() => shiftDate(-1)}>❮</button>
+           <button className="px-4 py-1 font-medium hover:text-[var(--text-primary)] text-secondary transition-colors text-sm border-x border-[var(--border)]" onClick={() => setReportDate(new Date())}>Current</button>
+           <button className="px-3 py-1 hover:text-[var(--text-primary)] text-secondary transition-colors" onClick={() => shiftDate(1)}>❯</button>
+        </div>
+
         <div className="flex bg-[var(--bg-elevated)] p-1 rounded-lg border border-[var(--border)]">
-           <button className={`px-4 py-1 text-sm rounded-md transition-colors ${tab === 'weekly' ? 'bg-[var(--accent)] text-white' : 'text-secondary hover:text-primary'}`} onClick={() => setTab('weekly')}>Weekly Report</button>
-           <button className={`px-4 py-1 text-sm rounded-md transition-colors ${tab === 'monthly' ? 'bg-[var(--accent)] text-white' : 'text-secondary hover:text-primary'}`} onClick={() => setTab('monthly')}>Monthly Report</button>
+           <button className={`px-4 py-1 text-sm rounded-md transition-colors ${tab === 'weekly' ? 'bg-[var(--accent)] text-white' : 'text-secondary hover:text-primary'}`} onClick={() => { setTab('weekly'); setReportDate(new Date()); }}>Weekly</button>
+           <button className={`px-4 py-1 text-sm rounded-md transition-colors ${tab === 'monthly' ? 'bg-[var(--accent)] text-white' : 'text-secondary hover:text-primary'}`} onClick={() => { setTab('monthly'); setReportDate(new Date()); }}>Monthly</button>
         </div>
       </header>
 
@@ -97,29 +114,30 @@ export default function ReportsPage() {
           
           <div className="grid grid-cols-12 gap-8">
             <div className="card bento-4 flex flex-col justify-center py-10" style={{ borderLeft: '4px solid var(--accent)' }}>
-              <div className="card-label">Total Time ({tab === 'weekly' ? 'This Week' : 'This Month'})</div>
-              <div className="text-5xl font-bold mb-3 tracking-tighter">{currentStats.current.toFixed(1)} <span className="text-xl text-muted font-medium">hrs</span></div>
-              <div className={`badge ${currentStats.percentage >= 0 ? 'badge-success' : 'badge-error'} self-start mt-2 px-3 py-1`}>
-                {currentStats.percentage >= 0 ? '+' : ''}{currentStats.percentage.toFixed(0)}% vs last {tab === 'weekly' ? 'week' : 'month'}
+              <div className="card-label">Total Time</div>
+              <div className="text-5xl font-bold mb-3 tracking-tighter">{periodStats.current.toFixed(1)} <span className="text-xl text-muted font-medium">hrs</span></div>
+              <div className={`badge ${periodStats.percentage >= 0 ? 'badge-success' : 'badge-error'} self-start mt-2 px-3 py-1`}>
+                {periodStats.percentage >= 0 ? '+' : ''}{periodStats.percentage.toFixed(0)}% vs last period
               </div>
             </div>
 
             <div className="card bento-8 flex flex-col min-h-[350px] overflow-visible" style={{ gap: '2rem' }}>
               <div className="card-label">Habit Breakdown (Hours Spent)</div>
-              {currentStats.breakdown.length === 0 ? (
+              {periodStats.breakdown.length === 0 ? (
                 <div className="flex-1 flex items-center justify-center text-secondary py-10">No data for this time period yet.</div>
               ) : (
                 <div className="flex-1" style={{ width: '100%', minHeight: '200px' }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={currentStats.breakdown.map(b => ({ ...b, hours: Number((b.duration/60).toFixed(1)) }))} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
+                    <BarChart data={periodStats.breakdown.map(b => ({ ...b, hours: Number((b.duration/60).toFixed(1)) }))} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
                       <XAxis type="number" hide />
                       <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false} />
                       <Tooltip 
                         cursor={{fill: 'rgba(var(--accent-rgb), 0.05)'}}
-                        contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text-primary)', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}
+                        contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}
+                        itemStyle={{ color: '#ffffff' }}
                       />
                       <Bar dataKey="hours" radius={[0, 6, 6, 0]} barSize={32}>
-                        {currentStats.breakdown.map((entry, index) => (
+                        {periodStats.breakdown.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Bar>
@@ -133,9 +151,9 @@ export default function ReportsPage() {
           <div className="card bento-12 mt-4">
             <div className="card-label mb-8">Detailed Statistics</div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {currentStats.breakdown.length === 0 ? (
+              {periodStats.breakdown.length === 0 ? (
                 <p className="text-secondary">No habits tracked in this period.</p>
-              ) : currentStats.breakdown.map((b, i) => (
+              ) : periodStats.breakdown.map((b, i) => (
                 <div key={i} className="flex flex-col md:flex-row md:items-center justify-between gap-2 p-4 bg-[var(--bg-elevated)] rounded-xl border border-[var(--border)]">
                    <div className="flex items-center gap-3">
                       <div className="w-4 h-4 rounded-full" style={{ background: b.color }} />

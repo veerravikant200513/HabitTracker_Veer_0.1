@@ -46,18 +46,30 @@ export default function DashboardPage() {
   // Derived state
   const completedTodayCount = 0; // Will be implemented with daily check logic
   const activeProjectsCount = 0; // Will implement project fetching
-  const now = new Date();
-  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+  const getStartOfWeek = (d: Date) => {
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    date.setDate(diff);
+    date.setHours(0,0,0,0);
+    return date;
+  };
+
+  const startOfThisWeek = getStartOfWeek(now);
+  const startOfLastWeek = new Date(startOfThisWeek);
+  startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
   
   const thisWeekMinutes = logs
-    .filter(l => new Date(l.logged_date) >= oneWeekAgo)
+    .filter(l => {
+       const d = new Date(l.logged_date);
+       return d >= startOfThisWeek;
+    })
     .reduce((sum, log) => sum + (log.duration_minutes || 0), 0);
   
   const lastWeekMinutes = logs
     .filter(l => {
       const d = new Date(l.logged_date);
-      return d >= twoWeeksAgo && d < oneWeekAgo;
+      return d >= startOfLastWeek && d < startOfThisWeek;
     })
     .reduce((sum, log) => sum + (log.duration_minutes || 0), 0);
     
