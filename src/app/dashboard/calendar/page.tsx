@@ -112,7 +112,10 @@ export default function CalendarPage() {
 
   const renderWeekly = () => {
     const startOfWeek = new Date(currentDate);
-    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+    const day = startOfWeek.getDay();
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday start
+    startOfWeek.setDate(diff);
+    startOfWeek.setHours(0,0,0,0);
     const days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date(startOfWeek);
       d.setDate(startOfWeek.getDate() + i);
@@ -194,7 +197,9 @@ export default function CalendarPage() {
     if (view === 'monthly') return currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
     if (view === 'weekly') {
       const start = new Date(currentDate);
-      start.setDate(currentDate.getDate() - currentDate.getDay());
+      const day = start.getDay();
+      const diff = start.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday start
+      start.setDate(diff);
       const end = new Date(start);
       end.setDate(start.getDate() + 6);
       return `${start.toLocaleDateString(undefined, {month:'short', day:'numeric'})} - ${end.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}`;
@@ -208,21 +213,21 @@ export default function CalendarPage() {
         <h1 className="text-3xl font-bold tracking-tight min-w-[250px]">{getDisplayTitle()}</h1>
         
         {/* View Switcher segment */}
-        <div className="flex bg-[var(--bg-elevated)] p-1 rounded-lg border border-[var(--border)] overflow-hidden">
+        <div className="flex bg-[var(--bg-elevated)] p-1 rounded-lg border border-[var(--border)] shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)] overflow-hidden">
            <button 
-             className={`px-5 py-1.5 text-sm font-medium transition-colors cursor-pointer outline-none ${view === 'daily' ? 'bg-[var(--bg-card)] text-[var(--accent-light)] shadow-sm rounded-md border border-[var(--border)]' : 'text-secondary hover:text-primary'}`} 
+             className={`px-5 py-1.5 text-sm font-semibold transition-all duration-300 cursor-pointer outline-none rounded-md ${view === 'daily' ? 'bg-[var(--accent)] text-white shadow-[0_0_10px_rgba(var(--accent-rgb),0.3)]' : 'text-secondary hover:text-primary hover:bg-[var(--bg-card)]'}`} 
              onClick={() => setView('daily')}
            >
              Day
            </button>
            <button 
-             className={`px-5 py-1.5 text-sm font-medium transition-colors cursor-pointer outline-none ${view === 'weekly' ? 'bg-[var(--bg-card)] text-[var(--accent-light)] shadow-sm rounded-md border border-[var(--border)]' : 'text-secondary hover:text-primary'}`} 
+             className={`px-5 py-1.5 text-sm font-semibold transition-all duration-300 cursor-pointer outline-none rounded-md ${view === 'weekly' ? 'bg-[var(--accent)] text-white shadow-[0_0_10px_rgba(var(--accent-rgb),0.3)]' : 'text-secondary hover:text-primary hover:bg-[var(--bg-card)]'}`} 
              onClick={() => setView('weekly')}
            >
              Week
            </button>
            <button 
-             className={`px-5 py-1.5 text-sm font-medium transition-colors cursor-pointer outline-none ${view === 'monthly' ? 'bg-[var(--bg-card)] text-[var(--accent-light)] shadow-sm rounded-md border border-[var(--border)]' : 'text-secondary hover:text-primary'}`} 
+             className={`px-5 py-1.5 text-sm font-semibold transition-all duration-300 cursor-pointer outline-none rounded-md ${view === 'monthly' ? 'bg-[var(--accent)] text-white shadow-[0_0_10px_rgba(var(--accent-rgb),0.3)]' : 'text-secondary hover:text-primary hover:bg-[var(--bg-card)]'}`} 
              onClick={() => setView('monthly')}
            >
              Month
@@ -236,7 +241,7 @@ export default function CalendarPage() {
                ❮
              </button>
              <button className="px-4 py-1 font-medium hover:text-[var(--text-primary)] text-secondary transition-colors text-sm border-x border-[var(--border)]" onClick={setToday}>
-               Today
+               {view === 'daily' ? 'Today' : view === 'weekly' ? 'This Week' : 'This Month'}
              </button>
              <button className="px-3 py-1 hover:text-[var(--text-primary)] text-secondary transition-colors" onClick={() => changeDate(1)}>
                ❯

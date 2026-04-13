@@ -13,6 +13,7 @@ export default function TimerPage() {
   // Timer state
   const [isActive, setIsActive] = useState(false);
   const [seconds, setSeconds] = useState(0);
+  const startTimeRef = useRef<number | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Manual entry state
@@ -37,12 +38,22 @@ export default function TimerPage() {
       toast.error('Please select a habit first');
       return;
     }
+    
     if (isActive) {
-      clearInterval(intervalRef.current!);
+      // Pause
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (startTimeRef.current) {
+        setSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
+      }
+      startTimeRef.current = null;
     } else {
+      // Start/Resume
+      startTimeRef.current = Date.now() - (seconds * 1000);
       intervalRef.current = setInterval(() => {
-        setSeconds(s => s + 1);
-      }, 1000);
+        if (startTimeRef.current) {
+          setSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
+        }
+      }, 100); // Check more frequently for smoothness
     }
     setIsActive(!isActive);
   }
@@ -51,10 +62,16 @@ export default function TimerPage() {
     setIsActive(false);
     if (intervalRef.current) clearInterval(intervalRef.current);
     
-    const minutes = Math.max(1, Math.round(seconds / 60));
+    let finalSeconds = seconds;
+    if (startTimeRef.current) {
+      finalSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
+    }
+    
+    const minutes = Math.max(1, Math.round(finalSeconds / 60));
     
     await logTime(minutes);
     setSeconds(0);
+    startTimeRef.current = null;
   }
 
   async function handleManualSubmit(e: React.FormEvent) {

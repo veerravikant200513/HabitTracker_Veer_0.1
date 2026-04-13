@@ -25,14 +25,24 @@ export default function ReportsPage() {
 
   const now = new Date();
 
-  // Weekly Stats
-  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+  // Weekly Stats (Monday to Sunday)
+  const getStartOfWeek = (d: Date) => {
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    date.setDate(diff);
+    date.setHours(0,0,0,0);
+    return date;
+  };
 
-  const thisWeekLogs = logs.filter(l => new Date(l.logged_date) >= oneWeekAgo);
+  const startOfThisWeek = getStartOfWeek(now);
+  const startOfLastWeek = new Date(startOfThisWeek);
+  startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+
+  const thisWeekLogs = logs.filter(l => new Date(l.logged_date) >= startOfThisWeek);
   const lastWeekLogs = logs.filter(l => {
     const d = new Date(l.logged_date);
-    return d >= twoWeeksAgo && d < oneWeekAgo;
+    return d >= startOfLastWeek && d < startOfThisWeek;
   });
 
   // Monthly Stats
@@ -83,32 +93,32 @@ export default function ReportsPage() {
       {loading ? (
         <div className="empty-state"><span className="spinner" /></div>
       ) : (
-        <div className="flex flex-col gap-8 max-w-5xl">
+        <div className="flex flex-col gap-10 max-w-6xl">
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="card bento-4 flex flex-col justify-center">
+          <div className="grid grid-cols-12 gap-8">
+            <div className="card bento-4 flex flex-col justify-center py-10" style={{ borderLeft: '4px solid var(--accent)' }}>
               <div className="card-label">Total Time ({tab === 'weekly' ? 'This Week' : 'This Month'})</div>
-              <div className="text-4xl font-bold mb-2">{currentStats.current.toFixed(1)} <span className="text-xl text-muted">hrs</span></div>
-              <div className={`badge ${currentStats.percentage >= 0 ? 'badge-success' : 'badge-error'} self-start`}>
+              <div className="text-5xl font-bold mb-3 tracking-tighter">{currentStats.current.toFixed(1)} <span className="text-xl text-muted font-medium">hrs</span></div>
+              <div className={`badge ${currentStats.percentage >= 0 ? 'badge-success' : 'badge-error'} self-start mt-2 px-3 py-1`}>
                 {currentStats.percentage >= 0 ? '+' : ''}{currentStats.percentage.toFixed(0)}% vs last {tab === 'weekly' ? 'week' : 'month'}
               </div>
             </div>
 
-            <div className="card bento-8 min-h-[250px]">
-              <div className="card-label mb-4">Time Breakdown (Hours)</div>
+            <div className="card bento-8 flex flex-col min-h-[350px] overflow-visible" style={{ gap: '2rem' }}>
+              <div className="card-label">Habit Breakdown (Hours Spent)</div>
               {currentStats.breakdown.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-muted">No activity to report.</div>
+                <div className="flex-1 flex items-center justify-center text-secondary py-10">No data for this time period yet.</div>
               ) : (
-                <div className="h-[200px]">
+                <div className="flex-1" style={{ width: '100%', minHeight: '200px' }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={currentStats.breakdown.map(b => ({ ...b, hours: Number((b.duration/60).toFixed(1)) }))} layout="vertical" margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                    <BarChart data={currentStats.breakdown.map(b => ({ ...b, hours: Number((b.duration/60).toFixed(1)) }))} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
                       <XAxis type="number" hide />
-                      <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false} />
+                      <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false} />
                       <Tooltip 
-                        cursor={{fill: 'transparent'}}
-                        contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text-primary)' }}
+                        cursor={{fill: 'rgba(var(--accent-rgb), 0.05)'}}
+                        contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text-primary)', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}
                       />
-                      <Bar dataKey="hours" radius={[0, 4, 4, 0]} barSize={24}>
+                      <Bar dataKey="hours" radius={[0, 6, 6, 0]} barSize={32}>
                         {currentStats.breakdown.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
@@ -120,9 +130,9 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          <div className="card bento-12">
-            <div className="card-label mb-6">Detailed Habits</div>
-            <div className="flex flex-col gap-4">
+          <div className="card bento-12 mt-4">
+            <div className="card-label mb-8">Detailed Statistics</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {currentStats.breakdown.length === 0 ? (
                 <p className="text-secondary">No habits tracked in this period.</p>
               ) : currentStats.breakdown.map((b, i) => (

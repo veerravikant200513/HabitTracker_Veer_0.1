@@ -25,6 +25,7 @@
 
   /* Accent — Electric Purple */
   --accent:       #7c6af7;
+  --accent-rgb:   124, 106, 247;
   --accent-light: #9d8ef9;
   --accent-dim:   rgba(124,106,247,0.15);
   --accent-glow:  rgba(124,106,247,0.30);
