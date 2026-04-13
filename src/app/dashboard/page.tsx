@@ -46,6 +46,7 @@ export default function DashboardPage() {
   // Derived state
   const completedTodayCount = 0; // Will be implemented with daily check logic
   const activeProjectsCount = 0; // Will implement project fetching
+  const now = new Date();
   const getStartOfWeek = (d: Date) => {
     const date = new Date(d);
     const day = date.getDay();
