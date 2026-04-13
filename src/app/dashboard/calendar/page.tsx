@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Habit, HabitLog } from '@/types';
+import { TimelineSwitcher } from '@/components/ui/timeline-switcher';
 
 export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
@@ -213,26 +214,7 @@ export default function CalendarPage() {
         <h1 className="text-3xl font-bold tracking-tight min-w-[250px]">{getDisplayTitle()}</h1>
         
         {/* View Switcher segment */}
-        <div className="flex bg-[var(--bg-elevated)] p-1 rounded-lg border border-[var(--border)] shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)] overflow-hidden">
-           <button 
-             className={`px-5 py-1.5 text-sm font-semibold transition-all duration-300 cursor-pointer outline-none rounded-md ${view === 'daily' ? 'bg-[var(--accent)] text-white shadow-[0_0_10px_rgba(var(--accent-rgb),0.3)]' : 'text-secondary hover:text-primary hover:bg-[var(--bg-card)]'}`} 
-             onClick={() => setView('daily')}
-           >
-             Day
-           </button>
-           <button 
-             className={`px-5 py-1.5 text-sm font-semibold transition-all duration-300 cursor-pointer outline-none rounded-md ${view === 'weekly' ? 'bg-[var(--accent)] text-white shadow-[0_0_10px_rgba(var(--accent-rgb),0.3)]' : 'text-secondary hover:text-primary hover:bg-[var(--bg-card)]'}`} 
-             onClick={() => setView('weekly')}
-           >
-             Week
-           </button>
-           <button 
-             className={`px-5 py-1.5 text-sm font-semibold transition-all duration-300 cursor-pointer outline-none rounded-md ${view === 'monthly' ? 'bg-[var(--accent)] text-white shadow-[0_0_10px_rgba(var(--accent-rgb),0.3)]' : 'text-secondary hover:text-primary hover:bg-[var(--bg-card)]'}`} 
-             onClick={() => setView('monthly')}
-           >
-             Month
-           </button>
-        </div>
+        <TimelineSwitcher view={view} onViewChange={setView} />
 
         {/* Navigation segment */}
         <div className="flex gap-2 min-w-[250px] justify-end">
